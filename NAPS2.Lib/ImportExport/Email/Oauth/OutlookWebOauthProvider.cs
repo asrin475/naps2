@@ -33,7 +33,7 @@ public class OutlookWebOauthProvider : OauthProvider
         }
     }
 
-    protected override string Scope => "https://outlook.office.com/mail.readwrite https://outlook.office.com/mail.send https://outlook.office.com/user.read offline_access";
+    protected override string Scope => "mail.readwrite mail.send user.read offline_access";
 
     protected override string CodeEndpoint => "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
 
@@ -63,15 +63,24 @@ public class OutlookWebOauthProvider : OauthProvider
 
     public string GetEmailAddress()
     {
-        var resp = GetAuthorized("https://outlook.office.com/api/v2.0/me");
-        return resp.Value<string>("EmailAddress") ?? throw new InvalidOperationException("Could not get Id from Outlook profile response");
+        var resp = GetAuthorized("https://graph.microsoft.com/v1.0/me");
+        return resp.Value<string>("mail") ?? throw new InvalidOperationException("Could not get Id from Outlook profile response");
     }
 
-    public async Task<string> UploadDraft(string messageRaw, ProgressHandler progress = default)
+    public async Task<DraftInfo> UploadDraft(string messageRaw, ProgressHandler progress = default)
     {
-        var resp = await PostAuthorized("https://outlook.office.com/api/v2.0/me/messages", messageRaw, "application/json", progress);
-        return resp.Value<string>("WebLink") ?? throw new InvalidOperationException("Could not get WebLink from Outlook messages response");
+        var resp = await PostAuthorized("https://graph.microsoft.com/v1.0/me/messages", messageRaw, "application/json", progress);
+        var webLink = resp.Value<string>("webLink") ?? throw new InvalidOperationException("Could not get WebLink from Outlook messages response");
+        var messageId = resp.Value<string>("id") ?? throw new InvalidOperationException("Could not get ID from Outlook messages response");
+        return new DraftInfo(webLink, messageId);
     }
+
+    public async Task SendDraft(string draftMessageId)
+    {
+        await PostAuthorizedNoResponse($"https://graph.microsoft.com/v1.0/me/messages/{draftMessageId}/send");
+    }
+
+    public record DraftInfo(string WebLink, string MessageId);
 
     #endregion
 }
