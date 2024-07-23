@@ -15,6 +15,7 @@ public class AboutForm : EtoDialogBase
 
     private readonly Control _donateButton;
     private readonly UpdateChecker _updateChecker;
+    private readonly UpdateCheckWidget _updateCheckerWidget;
     private readonly CheckBox _enableDebugLogging = C.CheckBox(UiStrings.EnableDebugLogging);
 
     public AboutForm(Naps2Config config, UpdateChecker updateChecker)
@@ -31,6 +32,12 @@ public class AboutForm : EtoDialogBase
         };
 
         _updateChecker = updateChecker;
+        _updateCheckerWidget = GetUpdateWidget()
+    }
+
+    protected override void Shown(EventArgs e){
+        // onShown dialog box
+        _updateCheckerWidget.DoUpdateCheck()
     }
 
     protected override void BuildLayout()
@@ -58,7 +65,7 @@ public class AboutForm : EtoDialogBase
                             _donateButton
                         ).Padding(left: 10)
                 ),
-                GetUpdateWidget(),
+                _updateCheckerWidget,
                 C.TextSpace(),
                 C.NoWrap(string.Format(UiStrings.CopyrightFormat, AssemblyHelper.COPYRIGHT_YEARS)),
                 Config.AppLocked.Has(c => c.EnableDebugLogging)

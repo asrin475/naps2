@@ -22,7 +22,7 @@ public class UpdateCheckWidget
         _checkForUpdates.CheckedChanged += CheckForUpdatesChanged;
         _updatePanel = new Panel();
         UpdateControls();
-        DoUpdateCheck();
+        // DoUpdateCheck();
     }
 
     public LayoutColumn AsControl()
